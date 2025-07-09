@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Estoque de Roupas - Dark Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --azul: #3b82f6;
+      --azul-hover: #93c5fd;
+      --vermelho: #ef4444;
+      --cinza-escuro: #1f2937;
+      --cinza-medio: #374151;
+      --cinza-claro: #e5e7eb;
+      --cinza-input: #9ca3af;
+      --amarelo: #fcd34d;
+      --amarelo-hover: #facc15;
+      --branco: #ffffff;
+      --borda-table: #6b7280;
+      --verde: #22c55e;
+      --laranja: #f97316;
+      --roxo: #9333ea;
+      --azul-escuro: #0284c7;
+      --rosa: #db2777;
+      --verde-sucesso: #10b981;
+      --foco: #60a5fa;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 30px;
+      color: var(--branco);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.8rem;
+      margin-bottom: 20px;
+      color: var(--cinza-claro);
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+      font-weight: 700;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      h1, .categoria, .card, .toast, tr, button {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+    .search-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+    }
+    #busca {
+      width: 100%;
+      padding: 14px 48px 14px 18px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: 2px solid var(--azul);
+      outline: none;
+      background-color: var(--cinza-medio);
+      color: var(--branco);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      will-change: border-color, box-shadow;
+    }
+    #busca:focus {
+      border-color: var(--foco);
+      box-shadow: 0 0 12px var(--foco);
+      outline: 3px solid var(--foco);
+      outline-offset: 2px;
+    }
+    #busca::placeholder {
+      color: var(--cinza-input);
+    }
+    .clear-search {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--cinza-claro);
+      cursor: pointer;
+      display: none;
+      font-size: 1.2rem;
+      padding: 10px;
+      transition: color 0.3s ease, transform 0.2s ease;
+      will-change: color, transform;
+    }
+    .clear-search.visible {
+      display: block;
+    }
+    .clear-search:hover {
+      color: var(--vermelho);
+      transform: scale(1.2);
+    }
+    .clear-search:focus {
+      outline: 3px solid var(--foco);
+      outline-offset: 2px;
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: var(--cinza-escuro);
+      color: var(--cinza-claro);
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+      will-change: opacity, transform;
+      font-size: 1rem;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .toast.success {
+      border-left: 4px solid var(--verde-sucesso);
+    }
+    .toast.success::before {
+      content: '✓';
+      font-size: 1.2rem;
+      color: var(--verde-sucesso);
+    }
+    .toast.error {
+      border-left: 4px solid var(--vermelho);
+    }
+    .toast.error::before {
+      content: '✗';
+      font-size: 1.2rem;
+      color: var(--vermelho);
+    }
+    .toast .close-toast {
+      background: none;
+      border: none;
+      color: var(--cinza-claro);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: transform 0.2s ease;
+    }
+    .toast .close-toast:hover {
+      transform: scale(1.2);
+    }
+    .toast .close-toast:focus {
+      outline: 3px solid var(--foco);
+      outline-offset: 2px;
+    }
+    .toast .progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--verde-sucesso);
+      animation: progress 5s linear forwards;
+    }
+    .toast.error .progress-bar {
+      background-color: var(--vermelho);
+    }
+    @keyframes progress {
+      from { width: 100%; }
+      to { width: 0; }
+    }
+    .category-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 30px;
+      overflow-x: auto;
+      padding: 10px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--azul) var(--cinza-escuro);
+    }
+    .category-buttons::-webkit-scrollbar {
+      height: 8px;
+    }
+    .category-buttons::-webkit-scrollbar-thumb {
+      background-color: var(--azul);
+      border-radius: 4px;
+    }
+    .category-buttons::-webkit-scrollbar-track {
+      background-color: var(--cinza-escuro);
+    }
+    .category-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--branco);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      will-change: transform, box-shadow;
+      min-height: 44px;
+    }
+    .category-btn.active {
+      transform: scale(1.05);
+      box-shadow: 0 0 12px var(--azul-hover);
+    }
+    .category-btn:focus {
+      outline: 3px solid var(--foco);
+      outline-offset: 2px;
+    }
+    .category-btn:active {
+      transform: scale(0.95);
+    }
+    .category-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.4s ease, height 0.4s ease;
+    }
+    .category-btn:active::after {
+      width: 200px;
+      height: 200px;
+      opacity: 0;
+    }
+    .category-btn.calca { background-color: var(--azul); }
+    .category-btn.shorts { background-color: var(--verde); }
+    .category-btn.saia { background-color: var(--vermelho); }
+    .category-btn.jaqueta { background-color: var(--laranja); }
+    .category-btn.jardineira { background-color: var(--roxo); }
+    .category-btn.macacao { background-color: var(--azul-escuro); }
+    .category-btn.macaquinho { background-color: var(--rosa); }
+    .category-btn.historico { background-color: var(--vermelho); }
+    .category-btn.todos { background-color: var(--cinza-medio); }
+    .category-btn:hover {
+      filter: brightness(1.1);
+      transform: scale(1.05);
+    }
+    .categoria {
+      margin-bottom: 70px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+      will-change: opacity, transform;
+    }
+    .categoria.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .grid-container {
+      display: flex;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      gap: 30px;
+      padding: 10px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--azul) var(--cinza-escuro);
+    }
+    .grid-container::-webkit-scrollbar {
+      height: 8px;
+    }
+    .grid-container::-webkit-scrollbar-thumb {
+      background-color: var(--azul);
+      border-radius: 4px;
+    }
+    .grid-container::-webkit-scrollbar-track {
+      background-color: var(--cinza-escuro);
+    }
+    .grid-container .card {
+      min-width: 400px;
+      flex-shrink: 0;
+    }
+    .card {
+      background: var(--cinza-escuro);
+      border-radius: 18px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.8);
+      padding: 24px;
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+      will-change: transform, box-shadow;
+    }
+    .card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 20px var(--azul-hover);
+    }
+    .card.highlighted {
+      border: 2px solid var(--foco);
+      box-shadow: 0 0 15px var(--foco);
+    }
+    h2 {
+      text-align: center;
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+      color: var(--cinza-claro);
+      font-weight: 600;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid var(--borda-table);
+      border-radius: 12px;
+      overflow: auto;
+      font-size: 1rem;
+      background-color: #111827;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+      color: var(--cinza-claro);
+      display: block;
+      white-space: nowrap;
+    }
+    #historico-exclusoes {
+      min-width: 600px;
+    }
+    #historico-exclusoes tbody tr {
+      background-color: rgba(239, 68, 68, 0.15);
+      border: 1px dashed var(--vermelho);
+    }
+    th {
+      color: var(--cinza-claro);
+      font-weight: 700;
+      padding: 12px;
+      text-align: center;
+      background-color: var(--azul);
+      user-select: none;
+    }
+    #historico-exclusoes th {
+      background-color: var(--vermelho);
+    }
+    td {
+      padding: 12px;
+      border-top: 1px solid var(--borda-table);
+      text-align: center;
+      vertical-align: middle;
+      background-color: var(--cinza-escuro);
+      position: relative;
+      font-size: 1rem;
+    }
+    #historico-exclusoes td {
+      background-color: transparent;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr.fade-in {
+      animation: fadeIn 0.4s ease-in-out;
+    }
+    tr.fade-out {
+      animation: fadeOut 0.4s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(10px) scale(0.95); }
+    }
+    td[contenteditable="true"] {
+      background-color: var(--amarelo);
+      color: #1f2937;
+      cursor: text;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+      will-change: background-color;
+    }
+    td[contenteditable="true"]:focus {
+      background-color: var(--amarelo-hover);
+      outline: 3px solid var(--foco);
+      outline-offset: 2px;
+    }
+    td.saved::after {
+      content: '✓';
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      color: var(--verde-sucesso);
+      font-size: 1rem;
+      opacity: 0;
+      animation: showCheck 0.8s ease-out;
+    }
+    @keyframes showCheck {
+      0% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0; transform: scale(1); }
+    }
+    .add-row-btn, .delete-row-btn {
+      margin-top: 12px;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, background 0.3s ease;
+      color: var(--branco);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      will-change: transform, background;
+      min-height: 44px;
+    }
+    .add-row-btn:focus, .delete-row-btn:focus {
+      outline: 3px solid var(--foco);
+      outline-offset: 2px;
+    }
+    .add-row-btn:active, .delete-row-btn:active {
+      transform: scale(0.9);
+    }
+    .add-row-btn::after, .delete-row-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.4s ease, height 0.4s ease;
+    }
+    .add-row-btn:active::after, .delete-row-btn:active::after {
+      width: 100px;
+      height: 100px;
+      opacity: 0;
+    }
+    .add-row-btn {
+      background-color: var(--azul);
+    }
+    .add-row-btn:hover {
+      background-color: var(--azul-hover);
+      transform: scale(1.05);
+    }
+    .delete-row-btn {
+      background-color: var(--vermelho);
+    }
+    .delete-row-btn:hover {
+      filter: brightness(0.85);
+      transform: scale(1.05);
+    }
+    .card.calca th, .card.calca .add-row-btn {
+      background-color: var(--azul);
+    }
+    .card.shorts th, .card.shorts .add-row-btn {
+      background-color: var(--verde);
+    }
+    .card.saia th, .card.saia .add-row-btn {
+      background-color: var(--vermelho);
+    }
+    .card.jaqueta th, .card.jaqueta .add-row-btn {
+      background-color: var(--laranja);
+    }
+    .card.jardineira th, .card.jardineira .add-row-btn {
+      background-color: var(--roxo);
+    }
+    .card.macacao th, .card.macacao .add-row-btn {
+      background-color: var(--azul-escuro);
+    }
+    .card.macaquinho th, .card.macaquinho .add-row-btn {
+      background-color: var(--rosa);
+    }
+    .btn-icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .highlight {
+      background: linear-gradient(90deg, var(--amarelo), var(--amarelo-hover));
+      color: #1f2937 !important;
+      font-weight: 700;
+      box-shadow: 0 0 8px rgba(251, 191, 36, 0.7);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 2rem; }
+      #busca { font-size: 0.9rem; }
+      .category-btn { font-size: 0.9rem; padding: 10px 18px; }
+      table { font-size: 0.9rem; }
+      .toast { font-size: 0.9rem; right: 10px; top: 10px; }
+      .grid-container .card { min-width: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Estoque de Roupas</h1>
+  <div class="search-container">
+    <input type="text" id="busca" placeholder="Digite OC, Modelo, Preço, Data..." autocomplete="off" spellcheck="false" aria-label="Campo de busca para filtrar estoque e histórico" />
+    <button class="clear-search" title="Limpar busca" aria-label="Limpar campo de busca">✕</button>
+  </div>
+  <div class="category-buttons" role="tablist">
+    <button class="category-btn todos active" data-categoria="todos" role="tab" aria-selected="true" aria-label="Mostrar todas as categorias">TODOS</button>
+    <button class="category-btn calca" data-categoria="Calça" role="tab" aria-selected="false" aria-label="Filtrar por Calça">CALÇA</button>
+    <button class="category-btn shorts" data-categoria="Shorts" role="tab" aria-selected="false" aria-label="Filtrar por Shorts">SHORTS</button>
+    <button class="category-btn saia" data-categoria="Saia" role="tab" aria-selected="false" aria-label="Filtrar por Saia">SAIA</button>
+    <button class="category-btn jaqueta" data-categoria="Jaqueta" role="tab" aria-selected="false" aria-label="Filtrar por Jaqueta">JAQUETA</button>
+    <button class="category-btn jardineira" data-categoria="Jardineira" role="tab" aria-selected="false" aria-label="Filtrar por Jardineira">JARDINEIRA</button>
+    <button class="category-btn macacao" data-categoria="Macacão" role="tab" aria-selected="false" aria-label="Filtrar por Macacão">MACACÃO</button>
+    <button class="category-btn macaquinho" data-categoria="Macaquinho" role="tab" aria-selected="false" aria-label="Filtrar por Macaquinho">MACAQUINHO</button>
+    <button class="category-btn historico" data-categoria="historico" role="tab" aria-selected="false" aria-label="Mostrar histórico de exclusões">HISTÓRICO</button>
+  </div>
+
+  <script>
+    const categorias = ["Calça", "Shorts", "Saia", "Jaqueta", "Jardineira", "Macacão", "Macaquinho"];
+    const precos = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135];
+    const linhasPorTabela = 5;
+    const body = document.body;
+
+    function criarIconeAdd() {
+      return `<svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6z"/></svg>`;
+    }
+
+    function criarIconeDelete() {
+      return `<svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-4.5l-1-1z"/></svg>`;
+    }
+
+    function gerarChave(categoria, preco) {
+      return `estoque_${categoria}_${preco}`;
+    }
+
+    function normalizarTexto(texto) {
+      return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+
+    function mostrarToast(mensagem, tipo = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${tipo}`;
+      toast.setAttribute('role', 'alert');
+      toast.setAttribute('aria-live', 'assertive');
+      toast.innerHTML = `
+        ${mensagem}
+        <button class="close-toast" aria-label="Fechar notificação">✕</button>
+        <div class="progress-bar"></div>
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 100);
+      const fecharToast = () => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+      };
+      toast.querySelector('.close-toast').addEventListener('click', fecharToast);
+      setTimeout(fecharToast, 5000);
+    }
+
+    function salvarTabela(tabela) {
+      const chave = gerarChave(tabela.dataset.categoria, tabela.dataset.preco);
+      const dados = [];
+      tabela.querySelectorAll("tbody tr").forEach(linha => {
+        const linhaData = [];
+        linha.querySelectorAll("td").forEach((td, index) => {
+          if (index < 4) linhaData.push(td.innerText);
+        });
+        dados.push(linhaData);
+      });
+      localStorage.setItem(chave, JSON.stringify(dados));
+    }
+
+    function salvarExclusao(categoria, preco, linhaData) {
+      const historico = JSON.parse(localStorage.getItem('historico_exclusoes') || '[]');
+      const timestamp = new Date().toLocaleString('pt-BR');
+      historico.push({
+        categoria,
+        preco,
+        oc: linhaData[0],
+        modelo: linhaData[1],
+        qtdvl: linhaData[2],
+        observacao: linhaData[3],
+        timestamp
+      });
+      localStorage.setItem('historico_exclusoes', JSON.stringify(historico));
+      carregarHistorico();
+      mostrarToast('Linha excluída e salva no histórico', 'success');
+    }
+
+    function excluirLinhaHistorico(index) {
+      const historico = JSON.parse(localStorage.getItem('historico_exclusoes') || '[]');
+      historico.splice(index, 1);
+      localStorage.setItem('historico_exclusoes', JSON.stringify(historico));
+      carregarHistorico();
+      mostrarToast('Linha removida do histórico', 'success');
+    }
+
+    function carregarHistorico() {
+      const tabelaHistorico = document.getElementById('historico-exclusoes').querySelector('tbody');
+      tabelaHistorico.innerHTML = '';
+      const historico = JSON.parse(localStorage.getItem('historico_exclusoes') || '[]');
+      historico.forEach((item, index) => {
+        const linha = document.createElement('tr');
+        linha.classList.add('fade-in');
+        linha.innerHTML = `
+          <td>${item.categoria}</td>
+          <td>R$${item.preco},00</td>
+          <td>${item.oc}</td>
+          <td>${item.modelo}</td>
+          <td>${item.qtdvl}</td>
+          <td>${item.observacao}</td>
+          <td>${item.timestamp}</td>
+          <td><button class="delete-row-btn" title="Excluir do histórico" data-index="${index}" aria-label="Excluir linha do histórico">${criarIconeDelete()} Excluir</button></td>
+        `;
+        tabelaHistorico.appendChild(linha);
+        const deleteBtn = linha.querySelector('.delete-row-btn');
+        deleteBtn.addEventListener('click', () => {
+          linha.classList.add('fade-out');
+          setTimeout(() => excluirLinhaHistorico(index), 400);
+        });
+      });
+    }
+
+    function carregarTabela(tabela) {
+      const chave = gerarChave(tabela.dataset.categoria, tabela.dataset.preco);
+      const dadosJSON = localStorage.getItem(chave);
+      if (!dadosJSON) return;
+      const dados = JSON.parse(dadosJSON);
+      const tbody = tabela.querySelector("tbody");
+      tbody.innerHTML = "";
+      dados.forEach(linhaData => {
+        const linha = document.createElement("tr");
+        linha.classList.add('fade-in');
+        linha.innerHTML = `
+          <td contenteditable="true" aria-label="Ordem de Compra">${linhaData[0]}</td>
+          <td contenteditable="true" aria-label="Modelo">${linhaData[1]}</td>
+          <td contenteditable="true" aria-label="Quantidade VL">${linhaData[2]}</td>
+          <td contenteditable="true" aria-label="Observação">${linhaData[3]}</td>
+          <td><button class="delete-row-btn" title="Excluir linha" aria-label="Excluir linha da tabela">${criarIconeDelete()} Excluir</button></td>
+        `;
+        tbody.appendChild(linha);
+        const deleteBtn = linha.querySelector(".delete-row-btn");
+        deleteBtn.addEventListener("click", () => {
+          linha.classList.add('fade-out');
+          setTimeout(() => {
+            const linhaData = [];
+            linha.querySelectorAll("td").forEach((td, index) => {
+              if (index < 4) linhaData.push(td.innerText);
+            });
+            salvarExclusao(tabela.dataset.categoria, tabela.dataset.preco, linhaData);
+            linha.remove();
+            salvarTabela(tabela);
+          }, 400);
+        });
+      });
+      tbody.querySelectorAll("td[contenteditable]").forEach(td => {
+        td.addEventListener("input", () => {
+          salvarTabela(tabela);
+          td.classList.add('saved');
+          setTimeout(() => td.classList.remove('saved'), 800);
+          mostrarToast('Alterações salvas', 'success');
+        });
+      });
+    }
+
+    categorias.forEach(categoria => {
+      const divCategoria = document.createElement("div");
+      divCategoria.className = "categoria";
+      divCategoria.dataset.categoria = categoria;
+      divCategoria.setAttribute('role', 'tabpanel');
+      divCategoria.setAttribute('aria-label', `Tabelas de ${categoria}`);
+
+      const tituloCategoria = document.createElement("h2");
+      tituloCategoria.textContent = categoria.toUpperCase();
+      divCategoria.appendChild(tituloCategoria);
+
+      const grid = document.createElement("div");
+      grid.className = "grid-container";
+
+      precos.forEach(preco => {
+        const card = document.createElement("div");
+        card.className = "card " + categoria.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        const titulo = document.createElement("h2");
+        titulo.textContent = `${categoria.toUpperCase()} DE R$${preco},00`;
+        card.appendChild(titulo);
+
+        const tabela = document.createElement("table");
+        tabela.dataset.categoria = categoria;
+        tabela.dataset.preco = preco;
+
+        const thead = document.createElement("thead");
+        thead.innerHTML = `
+          <tr>
+            <th scope="col">OC</th>
+            <th scope="col">MODELO</th>
+            <th scope="col">QTD VL</th>
+            <th scope="col">OBSERVAÇÃO</th>
+            <th scope="col">AÇÃO</th>
+          </tr>
+        `;
+        tabela.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        for (let i = 1; i <= linhasPorTabela; i++) {
+          const linha = document.createElement("tr");
+          linha.classList.add('fade-in');
+          linha.innerHTML = `
+            <td contenteditable="true" aria-label="Ordem de Compra">${i}</td>
+            <td contenteditable="true" aria-label="Modelo">${categoria.toUpperCase()} MODELO ${i}</td>
+            <td contenteditable="true" aria-label="Quantidade VL">0</td>
+            <td contenteditable="true" aria-label="Observação">—</td>
+            <td><button class="delete-row-btn" title="Excluir linha" aria-label="Excluir linha da tabela">${criarIconeDelete()} Excluir</button></td>
+          `;
+          tbody.appendChild(linha);
+          const deleteBtn = linha.querySelector(".delete-row-btn");
+          deleteBtn.addEventListener("click", () => {
+            linha.classList.add('fade-out');
+            setTimeout(() => {
+              const linhaData = [];
+              linha.querySelectorAll("td").forEach((td, index) => {
+                if (index < 4) linhaData.push(td.innerText);
+              });
+              salvarExclusao(tabela.dataset.categoria, tabela.dataset.preco, linhaData);
+              linha.remove();
+              salvarTabela(tabela);
+            }, 400);
+          });
+        }
+        tabela.appendChild(tbody);
+        card.appendChild(tabela);
+
+        const btnAddLinha = document.createElement("button");
+        btnAddLinha.className = "add-row-btn";
+        btnAddLinha.title = "Adicionar nova linha";
+        btnAddLinha.setAttribute('aria-label', `Adicionar nova linha à tabela de ${categoria} de R$${preco},00`);
+        btnAddLinha.innerHTML = `${criarIconeAdd()} Adicionar Linha`;
+        btnAddLinha.addEventListener("click", () => {
+          const novaLinha = document.createElement("tr");
+          const novaIndex = tbody.rows.length + 1;
+          novaLinha.classList.add('fade-in');
+          novaLinha.innerHTML = `
+            <td contenteditable="true" aria-label="Ordem de Compra">${novaIndex}</td>
+            <td contenteditable="true" aria-label="Modelo">${categoria.toUpperCase()} NOVO</td>
+            <td contenteditable="true" aria-label="Quantidade VL">0</td>
+            <td contenteditable="true" aria-label="Observação">—</td>
+            <td><button class="delete-row-btn" title="Excluir linha" aria-label="Excluir linha da tabela">${criarIconeDelete()} Excluir</button></td>
+          `;
+          tbody.appendChild(novaLinha);
+          const deleteBtn = novaLinha.querySelector(".delete-row-btn");
+          deleteBtn.addEventListener("click", () => {
+            novaLinha.classList.add('fade-out');
+            setTimeout(() => {
+              const linhaData = [];
+              novaLinha.querySelectorAll("td").forEach((td, index) => {
+                if (index < 4) linhaData.push(td.innerText);
+              });
+              salvarExclusao(tabela.dataset.categoria, tabela.dataset.preco, linhaData);
+              novaLinha.remove();
+              salvarTabela(tabela);
+            }, 400);
+          });
+          novaLinha.querySelectorAll("td[contenteditable]").forEach(td => {
+            td.addEventListener("input", () => {
+              salvarTabela(tabela);
+              td.classList.add('saved');
+              setTimeout(() => td.classList.remove('saved'), 800);
+              mostrarToast('Alterações salvas', 'success');
+            });
+          });
+          salvarTabela(tabela);
+          mostrarToast('Nova linha adicionada', 'success');
+        });
+        card.appendChild(btnAddLinha);
+        grid.appendChild(card);
+      });
+      divCategoria.appendChild(grid);
+      body.appendChild(divCategoria);
+    });
+
+    // Seção de Histórico de Exclusões
+    const divHistorico = document.createElement("div");
+    divHistorico.className = "categoria";
+    divHistorico.dataset.categoria = "historico";
+    divHistorico.setAttribute('role', 'tabpanel');
+    divHistorico.setAttribute('aria-label', 'Histórico de exclusões');
+    divHistorico.innerHTML = `
+      <h2>HISTÓRICO DE EXCLUSÕES</h2>
+      <div class="grid-container">
+        <div class="card">
+          <table id="historico-exclusoes">
+            <thead>
+              <tr>
+                <th scope="col">CATEGORIA</th>
+                <th scope="col">PREÇO</th>
+                <th scope="col">OC</th>
+                <th scope="col">MODELO</th>
+                <th scope="col">QTD VL</th>
+                <th scope="col">OBSERVAÇÃO</th>
+                <th scope="col">DATA/HORA</th>
+                <th scope="col">AÇÃO</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    body.appendChild(divHistorico);
+
+    // Carregar tabelas e histórico
+    document.querySelectorAll('table').forEach(tabela => {
+      if (tabela.id !== 'historico-exclusoes') carregarTabela(tabela);
+    });
+    carregarHistorico();
+
+    // Mostrar categorias com animação
+    document.querySelectorAll('.categoria').forEach(categoria => {
+      setTimeout(() => categoria.classList.add('visible'), 100);
+    });
+
+    // Função de debounce para busca
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // Filtro por botões de categoria
+    const categoryButtons = document.querySelectorAll('.category-btn');
+    categoryButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selectedCategory = btn.dataset.categoria;
+        document.querySelectorAll('.categoria').forEach(categoriaDiv => {
+          if (selectedCategory === 'todos') {
+            categoriaDiv.style.display = '';
+            categoriaDiv.classList.add('visible');
+          } else if (selectedCategory === 'historico') {
+            if (categoriaDiv.dataset.categoria === 'historico') {
+              categoriaDiv.style.display = '';
+              categoriaDiv.classList.add('visible');
+              categoriaDiv.querySelector('.card').classList.add('highlighted');
+              setTimeout(() => categoriaDiv.querySelector('.card').classList.remove('highlighted'), 1000);
+              categoriaDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+              categoriaDiv.style.display = 'none';
+              categoriaDiv.classList.remove('visible');
+            }
+          } else if (categoriaDiv.dataset.categoria === selectedCategory) {
+            categoriaDiv.style.display = '';
+            categoriaDiv.classList.add('visible');
+            categoriaDiv.querySelectorAll('.card').forEach(card => card.classList.add('highlighted'));
+            setTimeout(() => categoriaDiv.querySelectorAll('.card').forEach(card => card.classList.remove('highlighted')), 1000);
+            categoriaDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            categoriaDiv.style.display = 'none';
+            categoriaDiv.classList.remove('visible');
+          }
+        });
+        categoryButtons.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        buscaInput.value = '';
+        clearSearchBtn.classList.remove('visible');
+        realizarBusca('');
+      });
+    });
+
+    // Filtro de busca interativa
+    const buscaInput = document.getElementById('busca');
+    const clearSearchBtn = document.querySelector('.clear-search');
+
+    function realizarBusca(termo) {
+      termo = normalizarTexto(termo);
+      let totalResultados = 0;
+      const activeCategory = document.querySelector('.category-btn.active').dataset.categoria;
+
+      document.querySelectorAll('.categoria').forEach(categoriaDiv => {
+        let categoriaTemResultado = false;
+        if (categoriaDiv.dataset.categoria !== 'historico' && activeCategory !== 'todos' && activeCategory !== 'historico' && categoriaDiv.dataset.categoria !== activeCategory) {
+          categoriaDiv.style.display = 'none';
+          categoriaDiv.classList.remove('visible');
+          return;
+        }
+        categoriaDiv.querySelectorAll('.card').forEach(card => {
+          const tabela = card.querySelector('table');
+          let cardTemResultado = false;
+          tabela.querySelectorAll('tbody tr').forEach(linha => {
+            const oc = normalizarTexto(linha.cells[0].innerText);
+            const modelo = normalizarTexto(linha.cells[1].innerText);
+            const qtdvl = normalizarTexto(linha.cells[2].innerText);
+            const obs = normalizarTexto(linha.cells[3].innerText);
+            const preco = normalizarTexto(tabela.dataset.preco);
+            const titulo = normalizarTexto(card.querySelector('h2').innerText);
+            if (
+              oc.includes(termo) ||
+              modelo.includes(termo) ||
+              qtdvl.includes(termo) ||
+              obs.includes(termo) ||
+              preco.includes(termo) ||
+              titulo.includes(termo)
+            ) {
+              linha.style.display = '';
+              linha.cells[0].classList.toggle('highlight', oc.includes(termo));
+              linha.cells[1].classList.toggle('highlight', modelo.includes(termo));
+              linha.cells[2].classList.toggle('highlight', qtdvl.includes(termo));
+              linha.cells[3].classList.toggle('highlight', obs.includes(termo));
+              cardTemResultado = true;
+              totalResultados++;
+              if (totalResultados === 1 && termo !== '') {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            } else {
+              linha.style.display = 'none';
+              linha.cells[0].classList.remove('highlight');
+              linha.cells[1].classList.remove('highlight');
+              linha.cells[2].classList.remove('highlight');
+              linha.cells[3].classList.remove('highlight');
+            }
+          });
+          card.style.display = cardTemResultado ? '' : 'none';
+          if (cardTemResultado) {
+            categoriaTemResultado = true;
+            if (termo !== '') {
+              card.classList.add('highlighted');
+              setTimeout(() => card.classList.remove('highlighted'), 1000);
+            }
+          }
+        });
+        if (categoriaDiv.dataset.categoria !== 'historico') {
+          categoriaDiv.style.display = categoriaTemResultado && (activeCategory === 'todos' || activeCategory === 'historico' || categoriaDiv.dataset.categoria === activeCategory) ? '' : 'none';
+          if (categoriaTemResultado) {
+            categoriaDiv.classList.add('visible');
+          } else {
+            categoriaDiv.classList.remove('visible');
+          }
+        }
+      });
+
+      const tabelaHistorico = document.getElementById('historico-exclusoes');
+      let historicoTemResultado = false;
+      tabelaHistorico.querySelectorAll('tbody tr').forEach(linha => {
+        const categoria = normalizarTexto(linha.cells[0].innerText);
+        const preco = normalizarTexto(linha.cells[1].innerText);
+        const oc = normalizarTexto(linha.cells[2].innerText);
+        const modelo = normalizarTexto(linha.cells[3].innerText);
+        const qtdvl = normalizarTexto(linha.cells[4].innerText);
+        const obs = normalizarTexto(linha.cells[5].innerText);
+        const timestamp = normalizarTexto(linha.cells[6].innerText);
+        if (
+          categoria.includes(termo) ||
+          preco.includes(termo) ||
+          oc.includes(termo) ||
+          modelo.includes(termo) ||
+          qtdvl.includes(termo) ||
+          obs.includes(termo) ||
+          timestamp.includes(termo)
+        ) {
+          linha.style.display = '';
+          linha.cells[0].classList.toggle('highlight', categoria.includes(termo));
+          linha.cells[1].classList.toggle('highlight', preco.includes(termo));
+          linha.cells[2].classList.toggle('highlight', oc.includes(termo));
+          linha.cells[3].classList.toggle('highlight', modelo.includes(termo));
+          linha.cells[4].classList.toggle('highlight', qtdvl.includes(termo));
+          linha.cells[5].classList.toggle('highlight', obs.includes(termo));
+          linha.cells[6].classList.toggle('highlight', timestamp.includes(termo));
+          historicoTemResultado = true;
+          totalResultados++;
+          if (totalResultados === 1 && termo !== '') {
+            linha.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          linha.style.display = 'none';
+          linha.cells[0].classList.remove('highlight');
+          linha.cells[1].classList.remove('highlight');
+          linha.cells[2].classList.remove('highlight');
+          linha.cells[3].classList.remove('highlight');
+          linha.cells[4].classList.remove('highlight');
+          linha.cells[5].classList.remove('highlight');
+          linha.cells[6].classList.remove('highlight');
+        }
+      });
+      const historicoDiv = tabelaHistorico.closest('.categoria');
+      historicoDiv.style.display = historicoTemResultado || termo === '' || activeCategory === 'historico' ? '' : 'none';
+      if (historicoTemResultado || termo === '' || activeCategory === 'historico') {
+        historicoDiv.classList.add('visible');
+        if (historicoTemResultado && termo !== '') {
+          historicoDiv.querySelector('.card').classList.add('highlighted');
+          setTimeout(() => historicoDiv.querySelector('.card').classList.remove('highlighted'), 1000);
+        }
+      } else {
+        historicoDiv.classList.remove('visible');
+      }
+
+      if (termo === '') {
+        document.querySelectorAll('.categoria').forEach(categoriaDiv => {
+          if (activeCategory === 'todos' || categoriaDiv.dataset.categoria === activeCategory || categoriaDiv.dataset.categoria === 'historico') {
+            categoriaDiv.style.display = '';
+            categoriaDiv.classList.add('visible');
+            categoriaDiv.querySelectorAll('.card, tbody tr').forEach(el => el.style.display = '');
+          }
+        });
+        document.querySelectorAll('td.highlight').forEach(el => el.classList.remove('highlight'));
+        clearSearchBtn.classList.remove('visible');
+      } else {
+        clearSearchBtn.classList.add('visible');
+        mostrarToast(totalResultados === 0 ? 'Nenhum resultado encontrado' : `${totalResultados} resultado${totalResultados > 1 ? 's' : ''} encontrado${totalResultados > 1 ? 's' : ''}`, totalResultados === 0 ? 'error' : 'success');
+      }
+    }
+
+    const buscaDebounced = debounce(realizarBusca, 300);
+    buscaInput.addEventListener('input', () => buscaDebounced(buscaInput.value));
+    clearSearchBtn.addEventListener('click', () => {
+      buscaInput.value = '';
+      buscaDebounced('');
+      document.querySelectorAll('.categoria').forEach(categoria => {
+        categoria.classList.add('visible');
+      });
+    });
+
+    // Atalhos de teclado
+    buscaInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && buscaInput.value) {
+        clearSearchBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>
